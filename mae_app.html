@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle de Medicamentos - FRANCISCA FREITAS</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .med-container { margin-top: 20px; }
+        .med-day { margin-bottom: 20px; padding: 10px; border: 1px solid #ccc; }
+        .med-list, .optional-med-list { list-style: none; padding: 0; }
+        .med-list li, .optional-med-list li { margin: 5px 0; display: flex; align-items: center; }
+        .med-list input, .optional-med-list input { margin-right: 10px; }
+        button { margin-bottom: 10px; }
+        .date-input { margin-bottom: 10px; }
+        .delete-btn { margin-left: 10px; color: red; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h2>Controle de Medicamentos - FRANCISCA FREITAS</h2>
+    <p>Data de início: <span id="startDate"></span></p>
+    <button onclick="addDay()">Adicionar dia de hoje</button>
+    <button onclick="clearAll()">Limpar tudo</button>
+    <div class="med-container" id="medContainer"></div>
+    
+    <script>
+        const meds = [
+            { nome: "Sarcoplex - 1 Sachê", horarios: ["Ao dia"], validade: null },
+            { nome: "Omega3 - 2 Capsulas", horarios: ["Antes do café da manhã", "Antes do almoço", "Antes do jantar"], validade: null },
+            //{ nome: "Questran Light", horarios: ["10:00", "20:00"], validade: null },
+            { nome: "Domperidona - 1 Comprimido", horarios: ["08:00", "14:00", "20:00"], validade: 10 },
+            { nome: "Dramin - 1 Comprimido", horarios: ["08:00", "14:00", "20:00"], validade: 4},
+            { nome: "Noripurum - 20 gotas", horarios: ["08:00", "20:00"], validade: 90 },
+            { nome: "Bromoprida - 1 Comprimido", horarios: ["06:00", "12:00", "18:00", "00:00"], validade: 7 },
+            { nome: "Granulokine - Vacina", horarios: ["11:30"], validade: null },
+            
+        ];
+
+        const optionalMeds = [
+            { nome: "Muvinlax - 2 Envelopes (Constipação)", horarios: ["Manhã", "Noite"] },
+            { nome: "Cloridrato de Ondansetrona - 1 comprimido (náuseas + vômitos)", horarios: ["Manhã", "Tarde", "Noite", "Madrugada"] }
+        ];
+
+        const medContainer = document.getElementById("medContainer");
+        const startDateElement = document.getElementById("startDate");
+        const startDate = localStorage.getItem("startDate") || new Date().toISOString().split('T')[0];
+        startDateElement.textContent = startDate;
+
+        function formatDate(date) {
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}/${month}/${year}`;
+        }
+
+        function dateExists(date) {
+            return Array.from(medContainer.querySelectorAll(".med-day strong")).some(el => el.innerText === date);
+        }
+
+        function createMedicationList(medList, formattedDate) {
+            meds.forEach((med) => {
+                const li = document.createElement("li");
+                li.innerHTML = `<strong>${med.nome}</strong>`;
+
+                med.horarios.forEach((horario) => {
+                    const subLi = document.createElement("li");
+                    const checkbox = document.createElement("input");
+                    checkbox.type = "checkbox";
+                    const key = `med-${formattedDate}-${med.nome}-${horario}`;
+                    checkbox.checked = localStorage.getItem(key) === "true";
+                    checkbox.addEventListener("change", () => localStorage.setItem(key, checkbox.checked));
+
+                    const label = document.createElement("label");
+                    label.htmlFor = key;
+                    label.innerText = ` ${horario}`;
+
+                    subLi.appendChild(checkbox);
+                    subLi.appendChild(label);
+                    li.appendChild(subLi);
+                });
+                medList.appendChild(li);
+            });
+        }
+
+        function createOptionalMedList(medList, formattedDate) {
+            optionalMeds.forEach((med) => {
+                const li = document.createElement("li");
+                li.innerHTML = `<strong>${med.nome}</strong>`;
+
+                med.horarios.forEach((horario) => {
+                    const subLi = document.createElement("li");
+                    const checkbox = document.createElement("input");
+                    checkbox.type = "checkbox";
+                    const key = `optional-med-${formattedDate}-${med.nome}-${horario}`;
+                    checkbox.checked = localStorage.getItem(key) === "true";
+                    checkbox.addEventListener("change", () => localStorage.setItem(key, checkbox.checked));
+
+                    const label = document.createElement("label");
+                    label.htmlFor = key;
+                    label.innerText = ` ${horario}`;
+
+                    subLi.appendChild(checkbox);
+                    subLi.appendChild(label);
+                    li.appendChild(subLi);
+                });
+                medList.appendChild(li);
+            });
+        }
+
+        function addDay() {
+            const selectedDate = new Date();
+            const formattedDate = formatDate(selectedDate);
+
+            if (dateExists(formattedDate)) {
+                alert("Esta data já foi adicionada.");
+                return;
+            }
+
+            const confirmation = confirm(`Você quer adicionar o dia de ${formattedDate}?`);
+            if (confirmation) {
+                const dayDiv = document.createElement("div");
+                dayDiv.className = "med-day";
+                dayDiv.innerHTML = `<strong>${formattedDate}</strong><p>Remédios Diários:</p><ul class='med-list'></ul><p>Remédios (Se necessário):</p><ul class='optional-med-list'></ul>`;
+                
+                createMedicationList(dayDiv.querySelector(".med-list"), formattedDate);
+                createOptionalMedList(dayDiv.querySelector(".optional-med-list"), formattedDate);
+                
+                const deleteButton = document.createElement("span");
+                deleteButton.className = "delete-btn";
+                deleteButton.innerText = "Excluir o dia";
+                deleteButton.onclick = () => deleteDay(formattedDate, dayDiv);
+                dayDiv.appendChild(deleteButton);
+
+                medContainer.appendChild(dayDiv);
+            }
+        }
+    </script>
+</body>
+</html>
