@@ -12,7 +12,6 @@
         .med-list li, .optional-med-list li { margin: 5px 0; display: flex; align-items: center; }
         .med-list input, .optional-med-list input { margin-right: 10px; }
         button { margin-bottom: 10px; }
-        .date-input { margin-bottom: 10px; }
         .delete-btn { margin-left: 10px; color: red; cursor: pointer; }
     </style>
 </head>
@@ -35,7 +34,6 @@
             { nome: "Cloridrato de Duloxetina - 1 Comprimido", horarios: ["09:00"], validade: null },
             { nome: "Granulokine - Vacina", horarios: ["11:30"], validade: null },
             { nome: "Amitriptilina - 1 Comprimido", horarios: ["21:00"], validade: null },
-            //{ nome: "Questran Light", horarios: ["10:00", "20:00"], validade: null },    
         ];
 
         const optionalMeds = [
@@ -136,6 +134,22 @@
                 medContainer.appendChild(dayDiv);
             }
         }
+
+        function deleteDay(date, dayDiv) {
+            const confirmation = confirm(`Você tem certeza que deseja excluir o dia de ${date}?`);
+            if (confirmation) {
+                dayDiv.remove();
+            }
+        }
+
+        function clearAll() {
+            const confirmation = confirm("Você tem certeza que deseja limpar todos os dados?");
+            if (confirmation) {
+                medContainer.innerHTML = "";
+                localStorage.clear();
+            }
+        }
+
     </script>
 </body>
 </html>
